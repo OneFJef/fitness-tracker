@@ -1,12 +1,87 @@
 const router = require("express").Router();
-const { Workout } = require("../../models");
+const Workout = require("../../models/Workout.js");
 
 // GET most recent workout
+router.get("/", async (req, res) => {
+  try {
+    const workoutData = await Workout.find();
+    if (workoutData) {
+      Workout.aggregate(
+        [
+          {
+            $addFields: {
+              totalDuration: {
+                $sum: "$exercises.duration",
+              },
+            },
+          },
+        ],
+        (err, data) => {
+          if (err) {
+            res.status(400).json(err);
+          } else {
+            res.status(200).json(data);
+          }
+        }
+      );
+    }
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
 
 // POST new workout
+router.post("/", async (req, res) => {
+  try {
+    const workout = req.body;
+    const newWorkout = await Workout.create({ exercises: workout });
+    res.status(200).json(newWorkout);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
 
-// GET combined weight from past 7 workouts
+// PUT new exercise
+router.put("/:id", async (req, res) => {
+  try {
+    const queryDB = { _id: mongojs.ObjectId(req.params.id) };
+    const workout = req.body;
+    const updateWorkout = await Workout.updateOne(queryDB, {
+      $push: { exercises: workout },
+    });
+    res.status(200).json(updateWorkout);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
 
 // GET total duration from past 7 workouts
+router.get("/range", async (req, res) => {
+  try {
+    const data = await Workout.find().limit(7);
+    if (data) {
+      Workout.aggregate(
+        [
+          {
+            $addFields: {
+              totalDuration: {
+                $sum: "$exercises.duration",
+              },
+            },
+          },
+        ],
+        (err, data) => {
+          if (err) {
+            res.status(400).json(err);
+          } else {
+            res.json(data);
+          }
+        }
+      );
+    }
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
 
-module.exports = router
+module.exports = router;
