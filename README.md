@@ -5,7 +5,7 @@
   
   ## **Description**
   
-  An application that will assist you in reaching your fitness goals by heling you track your exercises.
+  An application that will assist you in reaching your fitness goals by hepling you track your exercises.
   
   ---
   
